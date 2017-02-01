@@ -20,12 +20,12 @@ for db in response:
     dir=os.path.join(path, db[0])
     print dir
     if os.path.exists(path + db[0]) == True :
-        subprocess.call(['innobackupex', '--user=root','--password=root','--databases="db[0]" ' , dir,'--no-timestamp'])
-        subprocess.call(['innobackupex','--apply-log','--export', dir])
+        subprocess.call(['innobackupex', '--user=root','--password=root','--databases="db[0]" ','--no-timestamp' , dir ])
+        subprocess.call(['innobackupex','--apply-log','--export', dir ])
     else:
          os.mkdir( path + db[0],0777 )
-         subprocess.call(['innobackupex', '--user=root','--password=root','--databases="db[0]" ', dir,'--no-timestamp'])
-         subprocess.call(['innobackupex','--apply-log','--export', dir])
+         subprocess.call(['innobackupex', '--user=root','--password=root','--databases="db[0]" ','--no-timestamp', dir ])
+         subprocess.call(['innobackupex','--apply-log','--export', dir ])
 
     print db[0]
 
