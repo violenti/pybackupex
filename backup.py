@@ -1,34 +1,36 @@
 
 import os
 import mysql.connector
-import subprocess
+from subprocess import call
 from mysql.connector import errorcode
+from slackclient import SlackClient
 
-USER='root'
-PASS='root'
-cnx = mysql.connector.connect (user=USER, password=PASS,
-                               host='localhost',buffered=True)
-cursor = cnx.cursor()
+USER='root' #name of the user of mysql  with privileges
+PASS='root' #password of the user of mysql with privileges
+slack_token=""
+sc = SlackClient(slack_token)
 
-query = "show databases;"
-
+#path where save your backup
 path="/datadrive/backup/"
-cursor.execute(query)
-response = cursor.fetchall()
 
+
+def get_connection():
+    return mysql.connector.connect (user=USER, password=PASS,
+                               host='localhost',buffered=True)
+conn=get_connection()
+cu=conn.cursor()
+cu.execute("show databases")
+
+response=cu.fetchall()
+conn.close()
+#call different databases one for one
+# and generate a backup
 for db in response:
-    dir=os.path.join(path, db[0])
-    print dir
-    if os.path.exists(path + db[0]) == True :
-        subprocess.call(['innobackupex', '--user=root','--password=root','--databases="db[0]" ','--no-timestamp' , dir ])
-        subprocess.call(['innobackupex','--apply-log','--export', dir ])
-    else:
-         os.mkdir( path + db[0],0777 )
-         subprocess.call(['innobackupex', '--user=root','--password=root','--databases="db[0]" ','--no-timestamp', dir ])
-         subprocess.call(['innobackupex','--apply-log','--export', dir ])
+    destination_dir=os.path.join(path, db[0])
+    base=db[0]
+    print base
 
-    print db[0]
-
-
-cursor.close()
-cnx.close()
+    if not os.path.exists(path + db[0]):
+           os.mkdir( path + db[0],0755)
+    backup=call(["/usr/bin/innobackupex", "--user=" + USER, "--password=" + PASS, "--databases=" + base,destination_dir,"--no-timestamp"])
+    sc.api_call("chat.postMessage",channel="#sensu",text="The Full backup of is correctly  :tada:")
